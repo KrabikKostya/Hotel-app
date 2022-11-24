@@ -5,8 +5,11 @@ var router = express.Router();
 router.get('/', function(req, res, next) {
   res.json({
     title: "Home",
-    content: "Welcome"
+    content: "Welcome",
+    message: "qwertyuiop"
   })
+  console.log(res)
+  return res
 });
 
 module.exports = router;
