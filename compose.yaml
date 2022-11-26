@@ -1,43 +1,62 @@
-version: '3.9'
+version: '3.8'
+
 services:
   db:
     image: mysql:8.0.27
     command: '--default-authentication-plugin=mysql_native_password'
-    restart: always
-    secrets:
-      - db-password
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      - MYSQL_ROOT_PASSWORD=$MYSQLDB_ROOT_PASSWORD
+      - MYSQL_DATABASE=$MYSQLDB_DATABASE
     volumes:
+      - ./db/.init.sql:/docker-entrypoint-initdb.d/0_init.sql
       - ./db/data:/var/lib/mysql
-    environment:
-      - MYSQL_DATABASE=example
-      - MYSQL_ROOT_PASSWORD=/run/secrets/db-password
-  backend:
-    build:
-      context: api
-    command: npm start
-    environment:
-      - DATABASE_DB=example
-      - DATABASE_USER=root
-      - DATABASE_PASSWORD=/run/secrets/db-password
-      - DATABASE_HOST=db
-      - NODE_ENV=development
-    expose:
-      - 8000
-    secrets:
-      - .env
+    # development settings
+    ports:
+      - $MYSQLDB_LOCAL_PORT:$MYSQLDB_LOCAL_PORT
+    # production settings
+    # expose:
+    #   - $MYSQLDB_LOCAL_PORT
+    networks:
+      - private
+
+  api:
     depends_on:
       - db
-    restart: always
-  frontend:
     build:
-      context: client
-    restart: always
-    command: npm start
+      context: ./api
+    command: "npm start"
+    restart: unless-stopped
+    env_file: ./.env
+    # development settings
     ports:
-      - 3000:3000
-    depends_on:
-      - backend
-secrets:
-  db-password:
-    file: db/.env
+      - $NODE_API_LOCAL_PORT:$NODE_API_LOCAL_PORT
+    # production settings
+    # expose:
+    #   - $NODE_API_LOCAL_PORT
+    networks:
+      - public
+      - private
+    environment:
+      - DB_HOST=db
+      - DB_USER=$MYSQLDB_USER
+      - DB_PASSWORD=$MYSQLDB_ROOT_PASSWORD
+      - DB_NAME=$MYSQLDB_DATABASE
+      - DB_PORT=$MYSQLDB_LOCAL_PORT
+    stdin_open: true
+    tty: true
 
+  client:
+    depends_on:
+      - api
+    build:
+      context: ./client
+    command: "npm start"
+    restart: unless-stopped
+    ports:
+      - $NODE_CLIENT_LOCAL_PORT:$NODE_CLIENT_PUBLICK_PORT
+
+networks:
+  public:
+  private:

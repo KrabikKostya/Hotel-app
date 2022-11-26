@@ -1,8 +1,5 @@
-FROM node:latest
-ENV PORT=3000
-WORKDIR /hotel-app
-COPY ./package.json ./api/
-COPY ./package-lock.json ./api/
-WORKDIR /hotel-app/api/
+FROM node:lts-alpine3.16
+WORKDIR /hotel-app/api
+COPY *.json .
 RUN npm install
 COPY . .

@@ -1,20 +1,24 @@
-import React, { useEffect, useState } from "react";
+// import React, { useEffect, useState } from "react";
+import axios from "axios";
 import logo from "./logo.svg";
 import "./App.css";
 
 function App() {
-  const [message, setMessage] = useState();
-  useEffect(() => {
-    fetch(" http://localhost:8000/api/")
-      .then(res => res.json())
-      .then(res => setMessage(res.message))
-      .catch(console.error);
-  }, [setMessage]);
+  var users = {}
+  async function fetchData() {
+    try {
+      const response = await axios.get("http://localhost:8080/api/")
+      users = response.data
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  fetchData()
+  console.log(users)
   return (
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
-        <p>{message || "Loading..."}</p>
         <p>
           Edit <code>src/App.js</code> and save to reload.
         </p>
